@@ -1,6 +1,5 @@
 # coding: utf-8
-from numpy import *
-import DecisionTree
+import MLDemoLib.cart
 
 
 def readdata():
@@ -11,14 +10,14 @@ def readdata():
             l.pop(-1)
     data = array(rdata)
     return data
-        
 
-def test_cart():
-    reload(DecisionTree)
+
+def test_main():
+    reload(cart)
     data = readdata()
-    tree = DecisionTree.cart_tree()
+    tree = cart.cart_tree()
     print tree.create_tree(data)
 
 
 if __name__ == '__main__':
-    test_cart()
+    test_main()

@@ -1,5 +1,7 @@
+# coding: utf-8
 from itertools import *
 from numpy import *
+
 
 def gini(prob):
     return 1 - sum([p**2 for p in prob])
@@ -38,7 +40,7 @@ def preprocess_for_discrete(features):
     '''Generate a frequence distribute for data.'''
     dist = {}
     for e in features:
-        if dist.has_key(e):
+        if e in dist:
             dist[e] += 1
         else:
             dist[e] = 1.0
@@ -77,7 +79,7 @@ def choose_class_for_discrete(X):
     enum = set(data)
     max_gini_gain = 0
     best_set = None
-    # Two levels of iteration is just for get a subset. 
+    # Two levels of iteration is just for get a subset.
     for i in xrange(1, (len(enum)+1)/2):
         for s in combinations(enum, i):
             gg = gini_gain_for_disc(s, enum.symmetric_difference(s), data)
@@ -88,27 +90,28 @@ def choose_class_for_discrete(X):
 
 
 # 进度：
-# 基本可以完成建造决策树（对离散特征），递归两层以上会出问题待修复
-# 节点可以使用
-# 无法判断离散/连续特征
-# 无法对连续特征判断并建立决策树
-# 预剪枝功能未完善
 # 后剪枝功能未实现
-# 预测功能未实现
 # 决策树可视化功能未实现
+
+# '''节点分支由features_value决定
+# 连续特征，左子树是小于轴点
+# 离散特征，左子树代表属于该类别'''
+
 class cart_tree(object):
-    """docstring for cart_tree"""
     def __init__(self):
-        return
+        pass
 
     def continuous_or_discrete(self, data):
         '''Something should be instead of.'''
-        return False
+        if data.dtype != np.float64:
+            return False
+        else:
+            return True
 
     def abort_creating(self, data):
-        '''When some conditions is satisfy, 
+        '''When some conditions is satisfy,
         abort creating tree. Pre-pruning step.'''
-        if len(data) < 10:
+        if len(data) < 5:
             return True
         else:
             return False
@@ -121,9 +124,9 @@ class cart_tree(object):
 
         # pre-prune
         if self.abort_creating(data):
-            return main_tree
+            return data[0, -1]
 
-        best_gini_gain = 0.0
+        best_gini_gain = float('-inf')
         seperation_dim = -1
         features_value = None
         c_d = None
@@ -145,6 +148,9 @@ class cart_tree(object):
                 features_value = f_value
                 c_d = continuous
 
+        if best_gini_gain == 0:
+            return data[0, -1]
+
         # seperate the data
         if c_d:
             X1 = data[data[:, seperation_dim] <= features_value, :]
@@ -159,6 +165,9 @@ class cart_tree(object):
 
         return main_tree
 
+    def train(self, X):
+        self._tree = self.create_tree(X)
+
     def prune(self):
         '''A method for post-prune.'''
 
@@ -166,7 +175,19 @@ class cart_tree(object):
         '''A visualization of this tree.'''
 
     def predict(self, X):
-        return None 
+        cur = self._tree
+        while type(cur) is dict:
+            if cur['info'][1]:
+                if X[cur['info'][0]] < cur['info'][2]:
+                    cur = cur['left']
+                else:
+                    cur = cur['right']
+            else:
+                if X[cur['info'][0]] in cur['info'][2]:
+                    cur = cur['left']
+                else:
+                    cur = cur['right']
+        return cur
 
 if __name__ == '__main__':
-    main()
+    test_main()
